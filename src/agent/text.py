@@ -39,6 +39,12 @@ SYNONYMS = {
     "backpack": ["bag"],
     "tumbler": ["drinkware"],
     "coupon": ["promotional", "discount"],
+    "cheaper": ["price", "adjustment", "drop"],
+    "dropped": ["price", "adjustment"],
+    "difference": ["price", "adjustment"],
+    "discount": ["price", "promotional"],
+    "markdown": ["price", "promotional"],
+    "expire": ["gift", "card"],
 }
 
 SUFFIXES = ("ings", "ing", "ies", "ied", "es", "ed", "s")

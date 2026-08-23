@@ -10,6 +10,8 @@ RETRYABLE = re.compile(
     re.IGNORECASE,
 )
 
+DAILY_QUOTA = re.compile(r"PerDay|per day|daily limit", re.IGNORECASE)
+
 MAX_ATTEMPTS = 6
 MAX_BACKOFF = 65.0
 
@@ -71,6 +73,11 @@ class LLMClient:
                 raise
             except Exception as error:
                 last_error = str(error)
+                if DAILY_QUOTA.search(last_error):
+                    raise LLMError(
+                        "the model provider reports the daily free-tier quota is used up; "
+                        "retrying will not help until it resets"
+                    ) from error
                 if not RETRYABLE.search(last_error) or attempt == MAX_ATTEMPTS - 1:
                     raise LLMError(last_error) from error
                 time.sleep(retry_after(last_error, attempt))

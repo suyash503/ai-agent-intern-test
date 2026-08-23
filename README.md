@@ -301,7 +301,10 @@ There is a second half to this one. Even with retries, a long enough sequence of
 daily quota, and when that happened the report showed eleven "failed" cases that were really one
 unreachable provider. A suite that reports an outage as a quality regression is worse than useless,
 so the harness now marks those cases `ERR`, excludes them from the assertion counts, and prints a
-line telling you to check the quota before reading the numbers as a regression.
+line telling you to check the quota before reading the numbers as a regression. `run-15.json` is
+kept in `evaluation/results/` as the record of that run. The client also fails fast on a daily
+quota error now, instead of backing off for five minutes against a limit that only resets at
+midnight.
 
 **Regression tests:** `tests/test_agent.py::test_model_failure_degrades_to_a_handoff` pins what
 happens when the provider genuinely fails, a plain message and a handoff, never a fabricated answer;

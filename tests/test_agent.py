@@ -151,3 +151,21 @@ def test_sessions_are_isolated_end_to_end(session_id):
     response = agent.ask("What is the standard return window?", session_id=session_id)
     assert agent.store.get(session_id).last_order_id is None
     assert response.answer
+
+
+def test_citations_cover_every_document_the_answer_used():
+    reply = StubMessage(
+        content="Final-sale items are still eligible for review when they arrive damaged, "
+        "defective, or incorrect, and you should report the damaged item within 7 calendar days "
+        "of delivery with photographs.\n"
+        "Sources: 04-damaged-or-wrong-items.md > Final-sale items, "
+        "04-damaged-or-wrong-items.md > Reporting window, "
+        "04-damaged-or-wrong-items.md > Available resolutions"
+    )
+    response = build([reply]).ask(
+        "A final-sale bag arrived with a broken zipper yesterday. Am I completely out of luck?",
+        session_id="a13",
+    )
+    files = [source.split(" > ")[0] for source in response.sources]
+    assert files.count("04-damaged-or-wrong-items.md") <= 2
+    assert len(set(files)) > 1

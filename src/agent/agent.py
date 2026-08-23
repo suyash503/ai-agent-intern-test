@@ -226,7 +226,20 @@ class SupportAgent:
                 if key in allowed and allowed[key] not in declared:
                     declared.append(allowed[key])
         inferred = [item for item in self._infer_sources(answer, passages) if item not in declared]
-        return (declared + inferred)[:4]
+        return self._diversify(declared + inferred)
+
+    def _diversify(self, citations, per_document=2, limit=5):
+        kept = []
+        seen = {}
+        for citation in citations:
+            filename = citation.split(chr(32)+chr(62)+chr(32))[0]
+            if seen.get(filename, 0) >= per_document:
+                continue
+            seen[filename] = seen.get(filename, 0) + 1
+            kept.append(citation)
+            if len(kept) >= limit:
+                break
+        return kept
 
     def _infer_sources(self, answer, passages):
         answer_tokens = set(tokenize(answer))

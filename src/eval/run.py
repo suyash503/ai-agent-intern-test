@@ -52,9 +52,10 @@ def load_cases(paths=None):
 
 
 class Result:
-    def __init__(self, case):
+    def __init__(self, case, errored=False):
         self.case = case
         self.checks = []
+        self.errored = errored
 
     def add(self, name, passed, detail=""):
         if passed is None:
@@ -66,6 +67,8 @@ class Result:
 
     @property
     def passed(self):
+        if self.errored:
+            return False
         return not any(check["status"] == "fail" for check in self.checks)
 
     def failures(self):
@@ -77,6 +80,7 @@ class Result:
             "category": self.case.get("category", "uncategorized"),
             "source_file": self.case.get("source_file"),
             "passed": self.passed,
+            "errored": self.errored,
             "checks": self.checks,
         }
 
@@ -91,7 +95,11 @@ def sanitized(results):
 
 
 def evaluate(case, responses, deterministic_only=False):
-    result = Result(case)
+    errored = any(response.handoff_reason == "llm_error" for response in responses)
+    result = Result(case, errored=errored)
+    if errored:
+        result.add("provider_reachable", False, "the model provider could not be reached")
+        return result
     expect = case.get("expect", {})
     final = responses[-1]
     text = normalize_answer(final.searchable_text())
@@ -277,12 +285,18 @@ def report(results, deterministic_only):
         print("{0:<24} {1}/{2}".format(category, bucket["passed"], bucket["total"]))
 
     passed = sum(1 for result in results if result.passed)
+    errored = sum(1 for result in results if result.errored)
     print("-" * 72)
     print("overall {0}/{1} cases passed".format(passed, len(results)))
+    if errored:
+        print(
+            "{0} case(s) could not reach the model provider and were not scored. "
+            "Check the quota or the key before reading these numbers as a regression.".format(errored)
+        )
     if deterministic_only:
         print("(--no-llm mode: only deterministic assertions were evaluated)")
     return {
-        "overall": {"passed": passed, "total": len(results)},
+        "overall": {"passed": passed, "total": len(results), "errored": errored},
         "categories": categories,
         "cases": [result.to_dict() for result in results],
         "mode": "deterministic" if deterministic_only else "full",

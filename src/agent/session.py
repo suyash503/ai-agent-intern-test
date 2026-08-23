@@ -65,6 +65,9 @@ class Session:
 
     def facts(self, message):
         facts = {}
+        explicit = extract_order_id(message)
+        if explicit:
+            facts["order_id_in_this_message"] = explicit
         if (
             self.last_order_id
             and not extract_order_id(message)

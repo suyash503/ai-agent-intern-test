@@ -5,7 +5,7 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
-from ..agent.agent import SupportAgent
+from ..agent.agent import ASKING, SupportAgent
 from ..agent.config import ROOT
 from ..agent.orders import normalize_order_id
 from ..agent.text import normalize_answer
@@ -143,7 +143,7 @@ def evaluate(case, responses, deterministic_only=False):
         if not enabled("must_ask_for"):
             result.add("must_ask_for:{0}".format(label), None, "skipped without a model")
             continue
-        asked = "?" in final.answer and re.search(r"order (id|number)", text) is not None
+        asked = ASKING.search(final.answer) is not None and re.search(r"order (id|number)", text) is not None
         result.add("must_ask_for:{0}".format(label), asked, "no clarifying question was asked")
 
     for label in expect.get("must_refuse_to_disclose", []):

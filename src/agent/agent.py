@@ -13,10 +13,19 @@ from .trace import Trace
 
 HANDOFF_TOKEN = "[[HANDOFF]]"
 CLARIFYING = re.compile(r"order (id|number)", re.IGNORECASE)
+ASKING = re.compile(
+    r"(\?|please (provide|share|confirm|send)|could you|can you|let me know|what is your)",
+    re.IGNORECASE,
+)
 
 INSUFFICIENT = re.compile(
-    r"(not (enough|sufficient)|insufficient|cannot confirm|can't confirm|unable to confirm"
-    r"|do(es)? not (contain|include|specify)|don't have (enough|that)|do not have (enough|that))",
+    r"(\binsufficient\b"
+    r"|not (enough|sufficient)[^.]{0,24}(information|detail|to (answer|confirm|say|tell))"
+    r"|(information|documentation|documents|passages) [^.]{0,24}(not (enough|sufficient)|do(es)? not"
+    r" (contain|include|specify|cover))"
+    r"|(cannot|can't|unable to) confirm"
+    r"|(do not|don't) have (enough|that|this) information"
+    r"|no information (about|on|regarding))",
     re.IGNORECASE,
 )
 
@@ -251,7 +260,7 @@ class SupportAgent:
             return True, "no_supporting_content"
         if INJECTION_PREMISE.search(message):
             return False, "premise_correction_only"
-        if not tool_calls and "?" in answer and CLARIFYING.search(answer):
+        if not tool_calls and CLARIFYING.search(answer) and ASKING.search(answer):
             return False, "clarifying_question_only"
         if model_handoff:
             if not ACTION_REQUEST.search(message) and not INSUFFICIENT.search(answer):

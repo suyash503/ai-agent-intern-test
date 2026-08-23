@@ -24,6 +24,8 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
+On macOS or Linux the activate line is `source .venv/bin/activate`.
+
 Add a Google AI Studio key to `.env`. A free key from https://aistudio.google.com/apikey is enough.
 
 ### Environment variables

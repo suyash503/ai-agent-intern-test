@@ -130,23 +130,7 @@ class SupportAgent:
             requested = getattr(message, "tool_calls", None)
             if not requested:
                 return (message.content or "").strip(), tool_calls
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": message.content or "",
-                    "tool_calls": [
-                        {
-                            "id": call.id,
-                            "type": "function",
-                            "function": {
-                                "name": call.function.name,
-                                "arguments": call.function.arguments,
-                            },
-                        }
-                        for call in requested
-                    ],
-                }
-            )
+            messages.append(self._as_message(message, requested))
             for call in requested:
                 arguments = self._parse_arguments(call.function.arguments)
                 if call.function.name != "order_lookup":
@@ -170,6 +154,28 @@ class SupportAgent:
             "so a specialist can check it for you.",
             tool_calls,
         )
+
+    def _as_message(self, message, requested):
+        if hasattr(message, "model_dump"):
+            payload = message.model_dump(exclude_none=True)
+            payload["role"] = "assistant"
+            payload.setdefault("content", message.content or "")
+            return payload
+        return {
+            "role": "assistant",
+            "content": message.content or "",
+            "tool_calls": [
+                {
+                    "id": call.id,
+                    "type": "function",
+                    "function": {
+                        "name": call.function.name,
+                        "arguments": call.function.arguments,
+                    },
+                }
+                for call in requested
+            ],
+        }
 
     def _parse_arguments(self, raw):
         try:

@@ -158,15 +158,25 @@ HEDGE_MARKERS = re.compile(
 )
 
 
+def canonical(label):
+    label = label.replace("–", "-").replace("—", "-")
+    label = label.replace("‘", "'").replace("’", "'")
+    return re.sub(r"\s+", " ", label).strip().lower()
+
+
+CONCEPT_INDEX = {canonical(key): value for key, value in CONCEPT_RULES.items()}
+INVENTION_INDEX = {canonical(key): value for key, value in INVENTION_RULES.items()}
+
+
 def concept_matches(concept, text):
-    rules = CONCEPT_RULES.get(concept)
+    rules = CONCEPT_INDEX.get(canonical(concept))
     if rules is None:
         return None
     return all(re.search(rule, text, re.IGNORECASE) for rule in rules)
 
 
 def invention_found(label, text):
-    rule = INVENTION_RULES.get(label)
+    rule = INVENTION_INDEX.get(canonical(label))
     if rule is None:
         return None
     return bool(re.search(rule, text, re.IGNORECASE))

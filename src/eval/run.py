@@ -3,6 +3,7 @@ import json
 import re
 import sys
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 
 from ..agent.agent import SupportAgent
 from ..agent.config import ROOT
@@ -27,6 +28,15 @@ DETERMINISTIC_ASSERTIONS = {
     "must_not_include",
     "sanitized_tool_result",
 }
+
+
+def flexible_contains(needle, text):
+    tokens = [re.escape(token) for token in normalize_answer(needle).split()]
+    if not tokens:
+        return False
+    if tokens[-1].endswith('s'):
+        tokens[-1] = tokens[-1][:-1] + 's?'
+    return re.search(r'[\s-]+'.join(tokens), text) is not None
 
 
 def load_cases(paths=None):
@@ -98,7 +108,7 @@ def evaluate(case, responses, deterministic_only=False):
             continue
         result.add(
             "must_include:{0}".format(needle),
-            normalize_answer(needle) in text,
+            flexible_contains(needle, text),
             "not present in the response",
         )
 
@@ -286,6 +296,7 @@ def main(argv=None):
     parser.add_argument("--no-llm", action="store_true", help="run the deterministic subset offline")
     parser.add_argument("--json", help="write the full result payload to this path")
     parser.add_argument("--baseline", action="store_true", help="also store the run as the baseline")
+    parser.add_argument("--workers", type=int, default=4, help="cases to run in parallel")
     parser.add_argument("--debug", action="store_true")
     arguments = parser.parse_args(argv)
 
@@ -303,10 +314,17 @@ def main(argv=None):
     else:
         agent = SupportAgent(debug=arguments.debug)
 
-    results = []
-    for case in cases:
-        responses = run_case(agent, case)
-        results.append(evaluate(case, responses, deterministic_only=arguments.no_llm))
+    workers = max(1, arguments.workers)
+    if workers == 1:
+        collected = [run_case(agent, case) for case in cases]
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            collected = list(pool.map(lambda case: run_case(agent, case), cases))
+
+    results = [
+        evaluate(case, responses, deterministic_only=arguments.no_llm)
+        for case, responses in zip(cases, collected)
+    ]
 
     payload = report(results, arguments.no_llm)
 

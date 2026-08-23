@@ -147,7 +147,12 @@ def order_lookup(order_id, dataset=None):
         result["estimate_available"] = False
         result["notes"].append(
             "Status is {0}. Carrier, tracking, and delivery-estimate fields were dropped because "
-            "they are stale operational data. No delivery is expected for this order.".format(status)
+            "they are stale operational data. {1}".format(
+                status,
+                "This order will not be shipped."
+                if status == "cancelled"
+                else "This order was returned and no further delivery is expected.",
+            )
         )
     elif status == "delivered":
         result["delivery_expectation"] = "delivered"

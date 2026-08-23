@@ -42,7 +42,10 @@ def test_no_document_takes_every_slot(retriever):
     counts = {}
     for name in sources(selected):
         counts[name] = counts.get(name, 0) + 1
-    assert max(counts.values()) <= 2
+    best = sources(selected)[0]
+    assert counts[best] <= 3
+    assert all(count <= 2 for name, count in counts.items() if name != best)
+    assert len(counts) > 1
 
 
 def test_injection_text_is_neutralised():

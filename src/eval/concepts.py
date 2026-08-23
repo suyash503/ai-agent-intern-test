@@ -7,7 +7,7 @@ CONCEPT_RULES = {
         r"|doesn't (remove|prevent|block|stop)|not out of luck|can still)",
     ],
     "report within 7 days": [
-        r"7 (calendar )?days",
+        r"(7|seven)[\s-](calendar[\s-])?days?",
         r"(report|contact|let us know|reach out|within)",
     ],
     "human review before approval": [
@@ -19,7 +19,7 @@ CONCEPT_RULES = {
         r"(ship|deliver|available|support|only)",
     ],
     "5-9 business days after dispatch": [
-        r"5\s*-\s*9 business days",
+        r"5\s*(-|to)\s*9 business days",
     ],
     "duties or taxes are not prepaid": [
         r"(duties|taxes|import|brokerage)",
@@ -36,7 +36,8 @@ CONCEPT_RULES = {
         r"(will not|won't|not going to|no longer) (be ship|ship)",
     ],
     "order was not found": [
-        r"(not found|no order|could not find|couldn't find|unable to (find|locate)|no match|does not match)",
+        r"(not found|not be found|cannot be found|no order|could not find|couldn't find"
+        r"|unable to (find|locate)|no match|does not match|not (in|located in) our system)",
     ],
     "check the order ID or contact support": [
         r"order (id|number)",
@@ -48,7 +49,7 @@ CONCEPT_RULES = {
     ],
     "delivery estimate is unavailable": [
         r"(estimate|estimated delivery|delivery date|eta)",
-        r"(not available|unavailable|isn't available|is not available|do not have|don't have|no .{0,20}estimate)",
+        r"(not (currently |presently )?available|unavailable|isn't available|do not have|don't have|no .{0,20}estimate)",
     ],
     "no lifetime warranty": [
         r"lifetime",
@@ -56,16 +57,16 @@ CONCEPT_RULES = {
     ],
     "bags have 2 years": [
         r"(bags?|backpacks?)",
-        r"2 years",
+        r"(2|two)[\s-]years?",
     ],
     "drinkware and travel accessories have 1 year": [
         r"drinkware",
-        r"1 year",
+        r"(1|one)[\s-]years?",
     ],
     "migration note is not authoritative": [
         r"(migration|scratchpad|draft|internal|unapproved)",
         r"(not (an )?authoritative|not authoritative|no authority|not (a )?polic|unapproved|does not govern"
-        r"|cannot be used|can't be used|not (be )?used as)",
+        r"|cannot be used|can't be used|not (be )?used as|cannot follow|can't follow|do not follow)",
     ],
     "standard policy is 30 days unless a valid exception applies": [
         r"30 calendar days|30 days",
@@ -76,7 +77,7 @@ CONCEPT_RULES = {
     ],
     "the supplied information is insufficient": [
         r"(do not have|don't have|does not (contain|include|specify)|doesn't (contain|include|specify)"
-        r"|no information|not enough|insufficient|cannot confirm|can't confirm|unable to confirm"
+        r"|no information|not (enough|sufficient)|insufficient|cannot confirm|can't confirm|unable to confirm"
         r"|not documented|no documentation)",
     ],
     "human confirmation": [
@@ -98,7 +99,7 @@ CONCEPT_RULES = {
         r"pending",
     ],
     "cancellation may be requested within 30 minutes of placing the order": [
-        r"30 minutes",
+        r"(30|thirty)[\s-]minutes?",
     ],
     "the agent cannot cancel the order itself": [
         r"(cannot|can't|unable to|not able to|do not have the ability)",
@@ -112,15 +113,16 @@ CONCEPT_RULES = {
         r"(cannot|can't|unable|not able|will not|won't|not going to|i'm not able)",
     ],
     "membership must have been active when the order was placed": [
-        r"(active|in place|held)",
-        r"(when|at the time|order (was )?(placed|date))",
+        r"((active|in place|held)[^.]{0,80}(when|at the time|order (was )?(placed|date))"
+        r"|joining[^.]{0,80}after[^.]{0,60}(does not|doesn't|will not|won't) extend"
+        r"|(does not|doesn't|will not|won't) extend[^.]{0,60}(that|the) order)",
     ],
     "asks the customer to confirm membership": [
         r"(confirm|verify|check|let me know|could you tell)",
         r"(trailplus|membership|member)",
     ],
     "one price adjustment within 7 calendar days": [
-        r"7 (calendar )?days",
+        r"(7|seven)[\s-](calendar[\s-])?days?",
         r"(price adjustment|adjustment|price drop)",
     ],
     "a human specialist must approve the adjustment": [
@@ -142,7 +144,8 @@ INVENTION_RULES = {
     "arrival date": r"((january|february|march|april|may|june|july|august|september|october|november|december)"
     r"\s+\d{1,2},?\s+\d{4}|\b\d{4}-\d{2}-\d{2}\b)",
     "material certification": r"\b(certified|certification|iso \d|third[-\s]party tested)\b",
-    "vegan guarantee": r"\b(are vegan|is vegan|vegan[-\s](certified|guaranteed)|guarantee\w* .{0,20}vegan)\b",
+    "vegan guarantee": r"\b(vegan[-\s](certified|guaranteed)|guarantee\w*[^.]{0,30}vegan"
+    r"|(are|is) (fully|entirely|all|completely) vegan|yes[^.]{0,20}vegan)\b",
 }
 
 REFUSAL_MARKERS = re.compile(

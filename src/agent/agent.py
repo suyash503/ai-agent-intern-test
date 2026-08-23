@@ -12,6 +12,19 @@ from .text import tokenize
 from .trace import Trace
 
 HANDOFF_TOKEN = "[[HANDOFF]]"
+CLARIFYING = re.compile(r"order (id|number)", re.IGNORECASE)
+
+INSUFFICIENT = re.compile(
+    r"(not (enough|sufficient)|insufficient|cannot confirm|can't confirm|unable to confirm"
+    r"|do(es)? not (contain|include|specify)|don't have (enough|that)|do not have (enough|that))",
+    re.IGNORECASE,
+)
+
+CANNOT_ACT = re.compile(
+    r"(cannot|can't|unable to|not able to) (cancel|refund|approve|issue|process|replace|exchange"
+    r"|change|complete|adjust)",
+    re.IGNORECASE,
+)
 SOURCES_LINE = re.compile(r"^\s*sources?\s*:\s*(.+)$", re.IGNORECASE | re.MULTILINE)
 
 PRIVACY_PROBE = re.compile(
@@ -23,6 +36,14 @@ PRIVACY_PROBE = re.compile(
 INJECTION_PREMISE = re.compile(
     r"(migration (note|scratchpad)|ignore (the|all) (real |current )?(policy|rules|instructions)|"
     r"use that (newer|other) document|internal note says|the document says to)",
+    re.IGNORECASE,
+)
+
+ACTION_REQUEST = re.compile(
+    r"\b(cancel|refund|replace|replacement|exchange|return it|approve|approval|price adjustment"
+    r"|change (my|the) address|issue (me|a)|credit me|give me the difference|reship|resend)\b"
+    r"|\b(arrived|came|showed up)\b[^.]{0,40}\b(damaged|broken|defective|wrong|cracked|torn)\b"
+    r"|\b(damaged|broken|defective|wrong|faulty)\b[^.]{0,40}\b(item|bag|zipper|order|tumbler|product)\b",
     re.IGNORECASE,
 )
 
@@ -109,7 +130,9 @@ class SupportAgent:
         sources = self._resolve_sources(answer, passages)
         answer = SOURCES_LINE.sub("", answer).strip()
 
-        handoff, reason = self._decide_handoff(message, passages, conflicts, tool_calls, model_handoff)
+        handoff, reason = self._decide_handoff(
+            message, answer, passages, conflicts, tool_calls, model_handoff
+        )
         session.add_assistant(answer)
         record = trace.finish(answer, sources, handoff, reason)
 
@@ -193,9 +216,8 @@ class SupportAgent:
                 key = cleaned.lower()
                 if key in allowed and allowed[key] not in declared:
                     declared.append(allowed[key])
-        if declared:
-            return declared
-        return self._infer_sources(answer, passages)
+        inferred = [item for item in self._infer_sources(answer, passages) if item not in declared]
+        return (declared + inferred)[:4]
 
     def _infer_sources(self, answer, passages):
         answer_tokens = set(tokenize(answer))
@@ -208,13 +230,13 @@ class SupportAgent:
                 for token in tokenize(item.text)
                 if self.retriever._word_idf.get(token, 0) > 1.2
             }
-            if len(distinctive & answer_tokens) >= 3:
+            if len(distinctive & answer_tokens) >= 4:
                 inferred.append(item.chunk.citation)
-            if len(inferred) >= 2:
+            if len(inferred) >= 3:
                 break
         return inferred
 
-    def _decide_handoff(self, message, passages, conflicts, tool_calls, model_handoff):
+    def _decide_handoff(self, message, answer, passages, conflicts, tool_calls, model_handoff):
         if conflicts:
             return True, "authoritative_sources_conflict"
         for call in tool_calls:
@@ -227,8 +249,16 @@ class SupportAgent:
             return True, "internal_data_requested"
         if not passages and not tool_calls:
             return True, "no_supporting_content"
+        if INJECTION_PREMISE.search(message):
+            return False, "premise_correction_only"
+        if not tool_calls and "?" in answer and CLARIFYING.search(answer):
+            return False, "clarifying_question_only"
         if model_handoff:
-            if INJECTION_PREMISE.search(message):
-                return False, "premise_correction_only"
+            if not ACTION_REQUEST.search(message) and not INSUFFICIENT.search(answer):
+                return False, "policy_answer_only"
             return True, "model_requested_human_help"
+        if INSUFFICIENT.search(answer):
+            return True, "insufficient_information"
+        if CANNOT_ACT.search(answer):
+            return True, "action_requires_specialist"
         return False, ""

@@ -197,7 +197,7 @@ class Retriever:
         if not ranked:
             return []
         best = ranked[0].score
-        floor = max(0.18, 0.38 * best)
+        floor = max(0.16, 0.28 * best)
         selected = []
         seen = Counter()
         restricted_used = 0
@@ -205,7 +205,8 @@ class Retriever:
             if item.score < floor:
                 break
             document = item.chunk.document
-            if seen[document.filename] >= per_document:
+            allowance = per_document + 2 if document.filename == ranked[0].chunk.document.filename else per_document
+            if seen[document.filename] >= allowance:
                 continue
             if document.tier == TIER_RESTRICTED:
                 if restricted_used >= 1 or item.score < 0.5 * best:

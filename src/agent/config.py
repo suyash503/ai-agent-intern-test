@@ -28,7 +28,7 @@ def load_settings() -> Settings:
     return Settings(
         api_key=os.getenv("LLM_API_KEY", ""),
         base_url=os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
-        model=os.getenv("LLM_MODEL", "gemini-3.6-flash"),
+        model=os.getenv("LLM_MODEL", "gemini-3.5-flash-lite"),
         temperature=float(os.getenv("LLM_TEMPERATURE", "0")),
         top_k=int(os.getenv("RETRIEVAL_TOP_K", "6")),
         kb_dir=ROOT / "knowledge-base",

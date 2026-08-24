@@ -2,6 +2,7 @@ import argparse
 import json
 import re
 import sys
+import threading
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
@@ -254,6 +255,21 @@ def evaluate(case, responses, deterministic_only=False):
     return result
 
 
+class Progress:
+    def __init__(self, total):
+        self.total = total
+        self.done = 0
+        self.lock = threading.Lock()
+
+    def tick(self, case_id):
+        with self.lock:
+            self.done += 1
+            print(
+                "[{0}/{1}] {2}".format(str(self.done).rjust(len(str(self.total))), self.total, case_id),
+                flush=True,
+            )
+
+
 def run_case(agent, case):
     session_id = "eval-{0}".format(case["id"])
     agent.store.reset(session_id)
@@ -329,11 +345,19 @@ def main(argv=None):
         agent = SupportAgent(debug=arguments.debug)
 
     workers = max(1, arguments.workers)
+    progress = Progress(len(cases))
+    print("running {0} cases with {1} worker(s)".format(len(cases), workers), flush=True)
+
+    def run(case):
+        responses = run_case(agent, case)
+        progress.tick(case["id"])
+        return responses
+
     if workers == 1:
-        collected = [run_case(agent, case) for case in cases]
+        collected = [run(case) for case in cases]
     else:
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            collected = list(pool.map(lambda case: run_case(agent, case), cases))
+            collected = list(pool.map(run, cases))
 
     results = [
         evaluate(case, responses, deterministic_only=arguments.no_llm)

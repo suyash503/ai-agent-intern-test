@@ -1,6 +1,6 @@
 # Demo recording script
 
-Target length: 2-4 minutes. Record the terminal, or the web page at http://127.0.0.1:8000, and save the result as `assets/demo.gif`.
+Target length: 2-4 minutes across both clips. One clip records the web page at http://127.0.0.1:8000, the other records the evaluation suite in a terminal. Both are embedded at the top of the README.
 
 ## 1. Knowledge-base answer with citations
 
@@ -33,9 +33,9 @@ Point out the surfaced source conflict, the refusal, and the handoff line.
 
 ## 5. Evaluation suite
 
-    python -m src.eval.run
+    python -m src.eval.run --workers 3
 
-Show the per-case results and the category table at the end.
+Show the progress lines, the per-case results, and the category table at the end. Keep workers at 3 or below on a free-tier key so the run does not stall on rate limits.
 
 ## 6. Trace (optional)
 

@@ -7,11 +7,19 @@ not answer on its own.
 
 ## Demo
 
-![demo](assets/demo.gif)
+Two clips. The first shows the agent answering; the second shows the evaluation suite. The shot list
+is in `assets/demo-script.md`.
 
-The recording covers a knowledge-base answer with citations, an order lookup, a multi-turn
-follow-up, a refusal with a human handoff, and the evaluation suite running. The shot list is in
-`assets/demo-script.md`.
+**The agent, through the web interface.** A knowledge-base answer with its citations, an order lookup
+that exposes no internal fields, a multi-turn follow-up understood without repeating the topic, and a
+question where two active policies contradict each other, which the agent surfaces rather than
+quietly resolving before recommending a human specialist.
+
+https://github.com/user-attachments/assets/7306c4a9-4379-4ecc-8c77-41a392f6fa98
+
+**The evaluation suite.** All 23 cases, with per-case results and the rollup by category.
+
+https://github.com/user-attachments/assets/817c5468-2d58-4bad-9b8f-e59c98c8b1ee
 
 ## Setup
 
@@ -20,16 +28,6 @@ Requires Python 3.11 or newer.
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-
-https://github.com/user-attachments/assets/7306c4a9-4379-4ecc-8c77-41a392f6fa98
-
-
-
-https://github.com/user-attachments/assets/817c5468-2d58-4bad-9b8f-e59c98c8b1ee
-
-
-
-
 pip install -r requirements.txt
 cp .env.example .env
 ```
@@ -84,8 +82,13 @@ Useful flags: `--case <id>`, `--category <name>`, `--workers <n>`, `--baseline`,
 and `--no-llm`, which runs the deterministic subset of the assertions against a stub responder and
 needs no API key at all. A full run takes about two minutes; `--no-llm` takes about a second.
 
-Cases that cannot reach the model are reported as `ERR` and excluded from the assertion counts, so
-an exhausted quota never masquerades as a quality regression.
+On a free-tier key, keep `--workers` at 3 or below. More workers exceed the per-minute allowance, and
+the time lost to backoff is longer than the time saved by the extra parallelism. The run prints each
+case as it finishes, and prints how long it is waiting whenever the provider rate-limits it, so a
+pause is always explained rather than looking like a hang.
+
+Cases that cannot reach the model are reported as `ERR` and excluded from the assertion counts, so an
+exhausted quota never masquerades as a quality regression.
 
 Unit and regression tests:
 
@@ -202,12 +205,11 @@ used `gemini-3.5-flash-lite` at temperature 0.
 
 Full payloads are in `evaluation/results/`. Every run is kept, not just the good ones:
 
-    12, 20, 20, 18, 21, 23, 21, 23, 21, 23, 23, 22, 23, 23
+    12, 20, 20, 18, 21, 23, 21, 23, 21, 23, 23, 22, 23, 23, 23
 
-The final figure is 23/23, and I only claim it because the last two runs on the current code both
-came back 23/23 back to back. Read the middle of that sequence honestly: the model is not
-deterministic even at temperature 0, and a single 23/23 earlier in the sequence was not yet a stable
-result.
+The final figure is 23/23, and I only claim it because the last three runs on the current code came
+back 23/23 in a row. Read the middle of that sequence honestly: the model is not deterministic even
+at temperature 0, and a single 23/23 earlier in the sequence was not yet a stable result.
 
 The cases that moved between runs were always the ones whose assertions leaned on the model's
 phrasing rather than on something the application controls. That is what pushed the design in two
@@ -355,8 +357,12 @@ correct answer that says `45-calendar-day`.
 - The evaluation harness maps each behavioural concept to an explicit regex rule. A concept with no
   rule fails loudly rather than silently passing, but new concepts need a rule written for them.
 - Sessions live in memory only, so restarting the process clears them.
-- The free Gemini tier allows five requests per minute, so a full evaluation run is paced by
-  retries and takes several minutes.
+- The free provider tier is rate limited per minute and per day, so a full evaluation run is paced by
+  the client rather than by the agent, and takes about two minutes at three workers. The daily
+  allowance also caps how many times the suite can be run in one sitting.
+- Evaluation is not fully repeatable. The model varies between runs even at temperature 0, so the
+  assertions are written against claims rather than wording, and a single run is weaker evidence than
+  a few consecutive ones.
 
 ### What I would do before production
 

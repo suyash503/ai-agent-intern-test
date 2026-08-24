@@ -20,6 +20,16 @@ Requires Python 3.11 or newer.
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
+
+https://github.com/user-attachments/assets/7306c4a9-4379-4ecc-8c77-41a392f6fa98
+
+
+
+https://github.com/user-attachments/assets/817c5468-2d58-4bad-9b8f-e59c98c8b1ee
+
+
+
+
 pip install -r requirements.txt
 cp .env.example .env
 ```

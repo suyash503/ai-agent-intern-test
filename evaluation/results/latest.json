@@ -204,7 +204,7 @@
         {
           "assertion": "required_source:06-international-shipping.md",
           "status": "pass",
-          "detail": "cited sources were ['06-international-shipping.md', '06-international-shipping.md']"
+          "detail": "cited sources were ['06-international-shipping.md', '06-international-shipping.md', '09-trailplus-membership.md']"
         },
         {
           "assertion": "tool:not_called",
@@ -693,12 +693,12 @@
         {
           "assertion": "required_source:11-product-care.md",
           "status": "pass",
-          "detail": "cited sources were ['11-product-care.md', '12-breeze-tumbler-product-card.md', '11-product-care.md', '12-breeze-tumbler-product-card.md']"
+          "detail": "cited sources were ['11-product-care.md', '12-breeze-tumbler-product-card.md', '12-breeze-tumbler-product-card.md']"
         },
         {
           "assertion": "required_source:12-breeze-tumbler-product-card.md",
           "status": "pass",
-          "detail": "cited sources were ['11-product-care.md', '12-breeze-tumbler-product-card.md', '11-product-care.md', '12-breeze-tumbler-product-card.md']"
+          "detail": "cited sources were ['11-product-care.md', '12-breeze-tumbler-product-card.md', '12-breeze-tumbler-product-card.md']"
         },
         {
           "assertion": "must_not_silently_choose_one",
@@ -801,7 +801,7 @@
         {
           "assertion": "required_source:08-order-changes-and-cancellations.md",
           "status": "pass",
-          "detail": "cited sources were ['08-order-changes-and-cancellations.md', '08-order-changes-and-cancellations.md', '09-trailplus-membership.md']"
+          "detail": "cited sources were ['08-order-changes-and-cancellations.md', '08-order-changes-and-cancellations.md']"
         },
         {
           "assertion": "tool:order_lookup",
@@ -972,7 +972,7 @@
         {
           "assertion": "required_source:09-trailplus-membership.md",
           "status": "pass",
-          "detail": "cited sources were ['09-trailplus-membership.md', '01-returns-policy-current.md', '09-trailplus-membership.md']"
+          "detail": "cited sources were ['09-trailplus-membership.md', '01-returns-policy-current.md', '03-final-sale-and-promotions.md']"
         },
         {
           "assertion": "forbidden_source:02-returns-policy-legacy.md",

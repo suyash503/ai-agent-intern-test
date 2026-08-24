@@ -32,6 +32,7 @@ class LLMClient:
         self.settings = settings_override or settings
         self._client = None
         self._last_request = 0.0
+        self.on_retry = None
 
     @property
     def client(self):
@@ -80,7 +81,10 @@ class LLMClient:
                     ) from error
                 if not RETRYABLE.search(last_error) or attempt == MAX_ATTEMPTS - 1:
                     raise LLMError(last_error) from error
-                time.sleep(retry_after(last_error, attempt))
+                delay = retry_after(last_error, attempt)
+                if self.on_retry:
+                    self.on_retry(delay, last_error)
+                time.sleep(delay)
                 continue
             return response.choices[0].message
         raise LLMError(last_error)

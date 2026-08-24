@@ -261,6 +261,15 @@ class Progress:
         self.done = 0
         self.lock = threading.Lock()
 
+    def waiting(self, delay, reason):
+        with self.lock:
+            print(
+                "      waiting {0:.0f}s ({1}); {2} of {3} cases done".format(
+                    delay, reason, self.done, self.total
+                ),
+                flush=True,
+            )
+
     def tick(self, case_id):
         with self.lock:
             self.done += 1
@@ -347,6 +356,13 @@ def main(argv=None):
     workers = max(1, arguments.workers)
     progress = Progress(len(cases))
     print("running {0} cases with {1} worker(s)".format(len(cases), workers), flush=True)
+
+    def notice(delay, error):
+        reason = "rate limit" if "429" in error else "provider error"
+        progress.waiting(delay, reason)
+
+    if hasattr(agent.client, "on_retry"):
+        agent.client.on_retry = notice
 
     def run(case):
         responses = run_case(agent, case)
